@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/app/__pycache__/
+backend/app/**/__pycache__/
+backend/tests/__pycache__/
+
+# Environment variables
+.env
+backend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+backend/dist/
+backend/build/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Expo
+.expo/
+.expo-shared/
+
+# Testing
+backend/htmlcov/
+backend/.coverage
+backend/coverage/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python virtual environments
+backend/venv/
+backend/env/
+backend/.venv/
+
+# Alembic
+backend/alembic/versions/__pycache__/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
