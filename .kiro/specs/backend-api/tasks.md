@@ -52,15 +52,15 @@ This implementation plan builds a complete Python backend API for PupMatch using
 - [x] 3. Checkpoint - Ensure database setup works
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Implement authentication service
-  - [ ] 4.1 Create authentication service
+- [-] 4. Implement authentication service
+  - [x] 4.1 Create authentication service
     - Implement user registration with password hashing (bcrypt)
     - Implement login with JWT token generation
     - Implement token validation middleware
     - Implement password reset flow
     - _Requirements: 1.1, 1.2, 1.4, 1.5_
 
-  - [ ] 4.2 Create Pydantic schemas for auth
+  - [x] 4.2 Create Pydantic schemas for auth
     - RegisterRequest, LoginRequest schemas
     - AuthToken response schema
     - User response schema
