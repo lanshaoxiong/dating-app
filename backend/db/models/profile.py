@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 from geoalchemy2 import Geometry
 
-from app.database import Base
+from db.database import Base
 
 
 ActivityLevel = Literal['low', 'medium', 'high']

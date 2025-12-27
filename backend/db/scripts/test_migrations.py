@@ -8,8 +8,8 @@ import sys
 import subprocess
 from pathlib import Path
 
-# Change to backend directory
-backend_dir = Path(__file__).parent.parent
+# Change to backend directory (parent of parent of this file)
+backend_dir = Path(__file__).parent.parent.parent
 import os
 os.chdir(backend_dir)
 
@@ -43,42 +43,42 @@ def test_migrations():
     
     # Check current revision
     if not run_command(
-        ["alembic", "current"],
+        ["alembic", "-c", "db/migrations/alembic.ini", "current"],
         "Checking current revision"
     ):
         return False
     
     # Upgrade to head
     if not run_command(
-        ["alembic", "upgrade", "head"],
+        ["alembic", "-c", "db/migrations/alembic.ini", "upgrade", "head"],
         "Applying migrations (upgrade head)"
     ):
         return False
     
     # Check current revision after upgrade
     if not run_command(
-        ["alembic", "current"],
+        ["alembic", "-c", "db/migrations/alembic.ini", "current"],
         "Verifying current revision"
     ):
         return False
     
     # Downgrade one step
     if not run_command(
-        ["alembic", "downgrade", "-1"],
+        ["alembic", "-c", "db/migrations/alembic.ini", "downgrade", "-1"],
         "Rolling back one migration (downgrade -1)"
     ):
         return False
     
     # Upgrade back to head
     if not run_command(
-        ["alembic", "upgrade", "head"],
+        ["alembic", "-c", "db/migrations/alembic.ini", "upgrade", "head"],
         "Re-applying migrations (upgrade head)"
     ):
         return False
     
     # Show migration history
     if not run_command(
-        ["alembic", "history"],
+        ["alembic", "-c", "db/migrations/alembic.ini", "history"],
         "Showing migration history"
     ):
         return False

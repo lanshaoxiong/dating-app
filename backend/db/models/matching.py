@@ -5,7 +5,7 @@ from sqlalchemy import String, DateTime, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
-from app.database import Base
+from db.database import Base
 
 
 class Like(Base):

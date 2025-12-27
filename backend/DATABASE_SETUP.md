@@ -34,7 +34,7 @@ sudo systemctl start postgresql
 **Option A: Using Python script (Recommended)**
 ```bash
 cd backend
-python scripts/setup_database.py
+python3 db/scripts/setup_database.py
 ```
 
 This script will:
@@ -82,7 +82,7 @@ Adjust the connection string based on your PostgreSQL setup:
 Apply all database migrations:
 ```bash
 cd backend
-alembic upgrade head
+alembic -c db/migrations/alembic.ini upgrade head
 ```
 
 ### 5. Verify Setup
@@ -90,13 +90,13 @@ alembic upgrade head
 Check that everything is working:
 ```bash
 # Check current migration version
-alembic current
+alembic -c db/migrations/alembic.ini current
 
 # View migration history
-alembic history
+alembic -c db/migrations/alembic.ini history
 
 # Run migration tests
-python scripts/test_migrations.py
+python3 db/scripts/test_migrations.py
 ```
 
 ## Database Schema
@@ -161,43 +161,43 @@ SELECT ST_Distance(
 
 After modifying models:
 ```bash
-alembic revision --autogenerate -m "description of changes"
+alembic -c db/migrations/alembic.ini revision --autogenerate -m "description of changes"
 ```
 
 ### Apply Migrations
 ```bash
 # Upgrade to latest
-alembic upgrade head
+alembic -c db/migrations/alembic.ini upgrade head
 
 # Upgrade to specific revision
-alembic upgrade <revision_id>
+alembic -c db/migrations/alembic.ini upgrade <revision_id>
 
 # Upgrade one step
-alembic upgrade +1
+alembic -c db/migrations/alembic.ini upgrade +1
 ```
 
 ### Rollback Migrations
 ```bash
 # Downgrade one step
-alembic downgrade -1
+alembic -c db/migrations/alembic.ini downgrade -1
 
 # Downgrade to specific revision
-alembic downgrade <revision_id>
+alembic -c db/migrations/alembic.ini downgrade <revision_id>
 
 # Downgrade all
-alembic downgrade base
+alembic -c db/migrations/alembic.ini downgrade base
 ```
 
 ### View Migration Status
 ```bash
 # Current revision
-alembic current
+alembic -c db/migrations/alembic.ini current
 
 # Migration history
-alembic history
+alembic -c db/migrations/alembic.ini history
 
 # Show SQL without executing
-alembic upgrade head --sql
+alembic -c db/migrations/alembic.ini upgrade head --sql
 ```
 
 ## Connection Pooling
@@ -244,13 +244,13 @@ psql -U postgres -c "ALTER USER your_user WITH SUPERUSER;"
 ### Migration Conflicts
 ```bash
 # Check current state
-alembic current
+alembic -c db/migrations/alembic.ini current
 
 # If stuck, you can stamp the database to a specific revision
-alembic stamp head
+alembic -c db/migrations/alembic.ini stamp head
 
 # Then try upgrading again
-alembic upgrade head
+alembic -c db/migrations/alembic.ini upgrade head
 ```
 
 ## Performance Tips

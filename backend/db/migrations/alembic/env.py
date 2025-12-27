@@ -11,9 +11,9 @@ from alembic import context
 
 # Import app config and models
 from app.config import settings
-from app.database import Base
+from db.database import Base
 # Import all models so they're registered with Base.metadata
-from app.models import (
+from db.models import (
     User, Profile, Photo, Prompt, UserPreferences,
     Like, Pass, Match,
     Conversation, Message,

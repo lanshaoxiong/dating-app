@@ -5,7 +5,7 @@ from sqlalchemy import String, Text, Boolean, DateTime, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from app.database import Base
+from db.database import Base
 
 
 class Conversation(Base):
