@@ -49,7 +49,7 @@ This implementation plan builds a complete Python backend API for PupMatch using
     - **Property 10: Coordinate Validation**
     - **Validates: Requirements 2.4, 8.6**
 
-- [ ] 3. Checkpoint - Ensure database setup works
+- [x] 3. Checkpoint - Ensure database setup works
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 4. Implement authentication service

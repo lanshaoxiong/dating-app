@@ -13,139 +13,307 @@ Backend API for PupMatch - A puppy dating application built with FastAPI, GraphQ
 - **ORM**: SQLAlchemy 2.0 (async)
 - **Testing**: pytest, Hypothesis
 
-## Project Structure
+---
+
+## 🚀 Quick Setup (5 minutes)
+
+### 1. Install Dependencies
+
+```bash
+cd backend
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install Python packages
+pip install -r requirements.txt
+```
+
+### 2. Install & Start Services
+
+```bash
+# Install PostgreSQL with PostGIS and Redis
+brew install postgresql@14 postgis redis
+
+# Start services
+brew services start postgresql@14
+brew services start redis
+```
+
+### 3. Setup Database
+
+```bash
+# Run automated setup
+python3 db/scripts/setup_database.py
+
+# Apply migrations
+alembic -c db/migrations/alembic.ini upgrade head
+
+# Verify everything works
+python3 db/scripts/checkpoint_verify.py
+```
+
+### 4. Start the Server
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Visit http://localhost:8000/docs for API documentation.
+
+---
+
+## 📁 Project Structure
 
 ```
 backend/
-├── app/
-│   ├── __init__.py
-│   ├── main.py              # FastAPI application entry point
-│   ├── config.py            # Configuration settings
-│   ├── database.py          # Database connection
-│   ├── redis_client.py      # Redis client
-│   ├── celery_app.py        # Celery configuration
-│   ├── models/              # SQLAlchemy models
-│   ├── schemas/             # Pydantic schemas
-│   └── services/            # Business logic
-├── tests/                   # Test suite
-├── .env                     # Environment variables
-├── pyproject.toml           # Poetry dependencies
-└── requirements.txt         # Pip dependencies
+├── app/                          # Application Layer
+│   ├── main.py                  # FastAPI entry point
+│   ├── config.py                # Configuration (env vars)
+│   ├── redis_client.py          # Redis client
+│   ├── celery_app.py            # Background jobs
+│   ├── schemas/                 # Pydantic schemas
+│   └── services/                # Business logic
+│
+├── db/                           # Database Layer
+│   ├── database.py              # Connection management
+│   ├── models/                  # SQLAlchemy models (11 tables)
+│   ├── migrations/              # Alembic migrations
+│   ├── scripts/                 # Setup & utility scripts
+│   ├── tests/                   # Database tests
+│   └── README.md                # Database documentation
+│
+├── tests/                        # Application Tests
+│   ├── conftest.py              # Pytest config
+│   ├── test_config.py           # Config tests
+│   └── test_redis_connection.py # Redis tests
+│
+├── .env                          # Environment variables
+├── requirements.txt              # Dependencies
+└── README.md                     # This file
 ```
 
-## Setup
+### Layer Responsibilities
 
-### Prerequisites
+- **`app/`** - API endpoints, business logic, external integrations
+- **`db/`** - Data persistence, schema management, database utilities
+- **`tests/`** - Application tests (API, services, integration)
+- **`db/tests/`** - Database tests (models, migrations, connections)
 
-- Python 3.11+
-- PostgreSQL 14+ with PostGIS extension
-- Redis 6+
-- AWS account (for S3 storage)
+---
 
-### Installation
+## 🔧 Common Commands
 
-1. **Install dependencies** (choose one):
-
-   Using Poetry:
-   ```bash
-   poetry install
-   ```
-
-   Using pip:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Configure environment variables**:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-3. **Set up PostgreSQL database**:
-   ```sql
-   CREATE DATABASE pupmatch;
-   CREATE DATABASE pupmatch_test;
-   \c pupmatch
-   CREATE EXTENSION postgis;
-   \c pupmatch_test
-   CREATE EXTENSION postgis;
-   ```
-
-4. **Run database migrations**:
-   ```bash
-   alembic upgrade head
-   ```
-
-### Running the Application
-
-1. **Start the API server**:
-   ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-2. **Start Celery worker** (in another terminal):
-   ```bash
-   celery -A app.celery_app worker --loglevel=info
-   ```
-
-3. **Start Celery beat** (for scheduled tasks):
-   ```bash
-   celery -A app.celery_app beat --loglevel=info
-   ```
-
-### API Documentation
-
-Once the server is running, visit:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-- GraphQL Playground: http://localhost:8000/graphql
-
-## Testing
-
-Run all tests:
+### Database
 ```bash
+# Setup database
+python3 db/scripts/setup_database.py
+
+# Run migrations
+alembic -c db/migrations/alembic.ini upgrade head
+
+# Verify setup
+python3 db/scripts/checkpoint_verify.py
+
+# Test database
+pytest db/tests/ -v
+```
+
+### Development
+```bash
+# Start API server
+uvicorn app.main:app --reload
+
+# Start Celery worker
+celery -A app.celery_app worker --loglevel=info
+
+# Run all tests
 pytest
+
+# Run with coverage
+pytest --cov=app --cov=db
 ```
 
-Run with coverage:
+### Services
 ```bash
-pytest --cov=app --cov-report=html
+# Start PostgreSQL
+brew services start postgresql@14
+
+# Start Redis
+brew services start redis
+
+# Check service status
+brew services list
 ```
 
-Run property-based tests only:
+---
+
+## 🗄️ Database
+
+See **[db/README.md](db/README.md)** for complete database documentation.
+
+### Quick Reference
+
+**11 Tables:**
+- `users`, `profiles`, `photos`, `prompts`, `user_preferences`
+- `likes`, `passes`, `matches`
+- `conversations`, `messages`
+- `playgrounds`
+
+**Key Features:**
+- PostGIS for geospatial queries
+- Async SQLAlchemy 2.0
+- 30+ indexes (including spatial GIST)
+- Connection pooling (20 + 10 overflow)
+- Cascade deletion
+
+**Import Models:**
+```python
+from db.database import Base, get_db, engine
+from db.models import User, Profile, Match, Message, Playground
+```
+
+---
+
+## ⚙️ Configuration
+
+Create `backend/.env` (copy from `.env.example`):
+
+```env
+# Database
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/pupmatch
+DATABASE_POOL_SIZE=20
+DATABASE_MAX_OVERFLOW=10
+
+# Redis
+REDIS_URL=redis://localhost:6379/0
+REDIS_MAX_CONNECTIONS=50
+
+# Security
+SECRET_KEY=your-secret-key-here
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+# AWS S3
+AWS_ACCESS_KEY_ID=your-key
+AWS_SECRET_ACCESS_KEY=your-secret
+S3_BUCKET_NAME=pupmatch-photos
+
+# CORS
+ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:19006"]
+```
+
+---
+
+## 🧪 Testing
+
 ```bash
+# Run all tests
+pytest
+
+# Run specific test suite
+pytest tests/              # Application tests
+pytest db/tests/           # Database tests
+
+# Run with coverage
+pytest --cov=app --cov=db --cov-report=html
+
+# Run property-based tests only
 pytest -m property
 ```
 
-## Development
+---
+
+## 🐛 Troubleshooting
+
+### PostgreSQL not connecting
+```bash
+brew services start postgresql@14
+pg_isready
+```
+
+### Redis not connecting
+```bash
+brew services start redis
+redis-cli ping
+```
+
+### Migration errors
+```bash
+alembic -c db/migrations/alembic.ini current
+alembic -c db/migrations/alembic.ini downgrade -1
+alembic -c db/migrations/alembic.ini upgrade head
+```
+
+### Import errors
+```bash
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+---
+
+## 🚀 API Documentation
+
+Once the server is running:
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **GraphQL Playground**: http://localhost:8000/graphql
+
+---
+
+## 📖 Development
 
 ### Code Style
 
-This project follows PEP 8 style guidelines. Format code with:
 ```bash
 black app/ tests/
 isort app/ tests/
-```
-
-### Type Checking
-
-Run type checking with:
-```bash
 mypy app/
 ```
 
-## Environment Variables
+### Import Conventions
 
-See `.env.example` for all available configuration options.
+```python
+# Database
+from db.database import Base, get_db, engine
+from db.models import User, Profile, Match
 
-Key variables:
-- `DATABASE_URL`: PostgreSQL connection string
-- `REDIS_URL`: Redis connection string
-- `SECRET_KEY`: JWT secret key
-- `AWS_ACCESS_KEY_ID`: AWS access key
-- `AWS_SECRET_ACCESS_KEY`: AWS secret key
-- `S3_BUCKET_NAME`: S3 bucket for photo storage
+# Application
+from app.config import settings
+from app.main import app
+from app.services.auth import AuthService  # When implemented
+```
+
+---
+
+## 🏗️ Next Steps
+
+1. ✅ Database setup complete
+2. ⏭️ Implement authentication service (Task 4)
+3. ⏭️ Implement profile management (Task 5)
+4. ⏭️ Add GraphQL layer
+5. ⏭️ Add WebSocket support
+
+See [.kiro/specs/backend-api/tasks.md](../.kiro/specs/backend-api/tasks.md) for the full implementation plan.
+
+---
+
+## 📚 Additional Documentation
+
+- **[db/README.md](db/README.md)** - Complete database documentation (setup, models, migrations, PostGIS)
+
+---
+
+## 💡 Tips
+
+- Always activate virtual environment: `source venv/bin/activate`
+- Run scripts from `backend` directory
+- Use `db/scripts/checkpoint_verify.py` to diagnose issues
+- Check `db/README.md` for database details
+
+---
 
 ## License
 

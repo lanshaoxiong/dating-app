@@ -6,7 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
 from app.main import app
-from app.database import Base, get_db
+from db.database import Base, get_db
 from app.config import settings
 
 # Test database URL

@@ -23,9 +23,7 @@ def upgrade() -> None:
     # Enable PostGIS extension
     op.execute('CREATE EXTENSION IF NOT EXISTS postgis')
     
-    # Create enum types
-    op.execute("CREATE TYPE activity_level_enum AS ENUM ('low', 'medium', 'high')")
-    op.execute("CREATE TYPE distance_unit_enum AS ENUM ('miles', 'kilometers')")
+    # Note: Enum types are created automatically by SQLAlchemy when creating tables
     
     # Create users table
     op.create_table(
@@ -56,8 +54,8 @@ def upgrade() -> None:
         sa.UniqueConstraint('user_id')
     )
     op.create_index(op.f('ix_profiles_user_id'), 'profiles', ['user_id'], unique=False)
-    # Create spatial index on location
-    op.execute('CREATE INDEX idx_profiles_location ON profiles USING GIST (location)')
+    # Create spatial index on location (IF NOT EXISTS to avoid conflicts with GeoAlchemy2)
+    op.execute('CREATE INDEX IF NOT EXISTS idx_profiles_location ON profiles USING GIST (location)')
     
     # Create photos table
     op.create_table(
@@ -207,8 +205,8 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_playgrounds_user_id'), 'playgrounds', ['user_id'], unique=False)
-    # Create spatial index on location
-    op.execute('CREATE INDEX idx_playgrounds_location ON playgrounds USING GIST (location)')
+    # Create spatial index on location (IF NOT EXISTS to avoid conflicts with GeoAlchemy2)
+    op.execute('CREATE INDEX IF NOT EXISTS idx_playgrounds_location ON playgrounds USING GIST (location)')
 
 
 def downgrade() -> None:
@@ -265,9 +263,6 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')
     
-    # Drop enum types
-    op.execute('DROP TYPE IF EXISTS distance_unit_enum')
-    op.execute('DROP TYPE IF EXISTS activity_level_enum')
-    
+    # Note: Enum types are dropped automatically by SQLAlchemy when dropping tables
     # Note: We don't drop PostGIS extension as it might be used by other databases
     # op.execute('DROP EXTENSION IF EXISTS postgis')
