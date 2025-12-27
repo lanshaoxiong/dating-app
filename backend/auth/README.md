@@ -209,6 +209,307 @@ jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
 
 ---
 
+## 🔐 Authentication vs Authorization
+
+### Authentication = "Who are you?"
+**Verifying identity** - Proving you are who you claim to be.
+
+**In our system:**
+```python
+# Authentication: Verify the user is logged in
+@app.get("/profile")
+async def get_profile(current_user: User = Depends(get_current_user)):
+    # ✓ User is authenticated (we know WHO they are)
+    return {"user_id": current_user.id}
+```
+
+**What happens:**
+1. User provides token
+2. System validates token
+3. System confirms: "Yes, you are user-id-123"
+
+### Authorization = "What can you do?"
+**Verifying permissions** - Checking if you're allowed to perform an action.
+
+**In our system:**
+```python
+# Authorization: Check if user can access THIS specific resource
+@app.delete("/profile/{profile_id}")
+async def delete_profile(
+    profile_id: str,
+    current_user: User = Depends(get_current_user)  # Authentication
+):
+    profile = await db.get(Profile, profile_id)
+    
+    # Authorization: Check ownership
+    if profile.user_id != current_user.id:
+        raise HTTPException(403, "Not your profile")  # Forbidden
+    
+    await db.delete(profile)
+    return {"deleted": True}
+```
+
+**What happens:**
+1. User is authenticated (we know who they are)
+2. User tries to delete profile X
+3. System checks: "Does this user OWN profile X?"
+4. If yes → allow, if no → 403 Forbidden
+
+### Real-World Examples
+
+**Authentication:**
+```python
+# ✓ Are you logged in?
+GET /auth/me
+Authorization: Bearer eyJ...
+
+# If token valid → 200 OK (authenticated)
+# If token invalid → 401 Unauthorized (not authenticated)
+```
+
+**Authorization:**
+```python
+# ✓ Are you logged in? (authentication)
+# ✓ Can you access THIS resource? (authorization)
+GET /profile/user-456
+Authorization: Bearer eyJ...  # Token for user-123
+
+# User-123 is authenticated (valid token)
+# But trying to access user-456's profile
+# → 403 Forbidden (not authorized)
+```
+
+### HTTP Status Codes
+
+- **401 Unauthorized** = Authentication failed (who are you?)
+  - No token provided
+  - Invalid token
+  - Expired token
+  
+- **403 Forbidden** = Authorization failed (what can you do?)
+  - Valid token (authenticated)
+  - But not allowed to access this resource
+  - Example: Trying to delete someone else's profile
+
+### In Our Auth Module
+
+**What we implement:**
+- ✅ **Authentication** - `get_current_user()` verifies WHO you are
+- ⚠️ **Authorization** - Each endpoint checks WHAT you can do
+
+**Example:**
+```python
+# Authentication (in auth module)
+current_user = Depends(get_current_user)  # WHO are you?
+
+# Authorization (in each endpoint)
+if resource.owner_id != current_user.id:  # WHAT can you do?
+    raise HTTPException(403)
+```
+
+### Summary
+
+| Concept | Question | Example | Status Code |
+|---------|----------|---------|-------------|
+| **Authentication** | Who are you? | Login, validate token | 401 Unauthorized |
+| **Authorization** | What can you do? | Check ownership, permissions | 403 Forbidden |
+
+**Simple analogy:**
+- **Authentication** = Showing your ID at the door (proving who you are)
+- **Authorization** = Checking if your ticket allows you into VIP section (what you can access)
+
+---
+
+## 🎯 How to Use Tokens
+
+### Get a Token (Login)
+
+```bash
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "mypassword"}'
+
+# Response:
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "expires_in": 86400
+}
+```
+
+### Use Token in Requests
+
+```bash
+# Include token in Authorization header
+curl -X GET http://localhost:8000/auth/me \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+### Frontend Usage (React Native)
+
+```javascript
+// 1. Login and store token
+const login = async (email, password) => {
+  const response = await fetch('http://localhost:8000/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  
+  const data = await response.json();
+  
+  // Store token in AsyncStorage
+  await AsyncStorage.setItem('access_token', data.access_token);
+  
+  return data;
+};
+
+// 2. Use token in subsequent requests
+const getProfile = async () => {
+  const token = await AsyncStorage.getItem('access_token');
+  
+  const response = await fetch('http://localhost:8000/profile', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  return response.json();
+};
+
+// 3. Handle token expiration
+const makeAuthenticatedRequest = async (url, options = {}) => {
+  const token = await AsyncStorage.getItem('access_token');
+  
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  if (response.status === 401) {
+    // Token expired, redirect to login
+    await AsyncStorage.removeItem('access_token');
+    navigation.navigate('Login');
+  }
+  
+  return response.json();
+};
+```
+
+### Backend Usage (Protect Endpoints)
+
+```python
+from fastapi import Depends
+from auth.dependencies import get_current_user
+from db.models.user import User
+
+# Simple protected endpoint
+@app.get("/profile")
+async def get_profile(current_user: User = Depends(get_current_user)):
+    # current_user is automatically populated from token
+    return {
+        "user_id": current_user.id,
+        "email": current_user.email
+    }
+
+# Protect with ownership check
+@app.delete("/profile/{profile_id}")
+async def delete_profile(
+    profile_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    profile = await db.get(Profile, profile_id)
+    
+    # Ensure user owns this profile
+    if profile.user_id != current_user.id:
+        raise HTTPException(403, "Not your profile")
+    
+    await db.delete(profile)
+    return {"deleted": True}
+
+# Optional authentication
+from typing import Optional
+
+@app.get("/public-or-private")
+async def mixed_endpoint(
+    current_user: Optional[User] = Depends(get_current_user)
+):
+    if current_user:
+        return {"message": f"Hello {current_user.email}"}
+    else:
+        return {"message": "Hello guest"}
+```
+
+### Token Validation Flow
+
+```
+Client Request
+    ↓
+Authorization: Bearer eyJ...
+    ↓
+dependencies.py: get_current_user()
+    ↓
+Extract token from header
+    ↓
+service.py: validate_token()
+    ↓
+1. Decode JWT (verify signature)
+2. Check expiration
+3. Extract user_id from "sub"
+4. Query database for user
+    ↓
+Return User object
+    ↓
+Endpoint executes with authenticated user
+```
+
+### What's Inside the Token
+
+```python
+# Decoded JWT payload
+{
+  "sub": "user-id-123",      # User ID (who you are)
+  "exp": 1735689600,         # Expiration (when it expires)
+  "iat": 1735603200          # Issued at (when it was created)
+}
+
+# The token is signed with SECRET_KEY
+# If anyone modifies it, signature verification fails
+```
+
+### Token Lifecycle
+
+```
+1. User logs in
+   ↓
+2. Server generates JWT (expires in 24h)
+   ↓
+3. Client stores token
+   ↓
+4. Client includes token in every request
+   ↓
+5. Server validates token on each request
+   ↓
+6. After 24h, token expires
+   ↓
+7. Client must login again
+```
+
+### Key Points
+
+- **Stateless**: Server doesn't store sessions, just validates signature
+- **Self-contained**: Token includes user ID, no database lookup needed for validation
+- **Secure**: Signed with SECRET_KEY, cannot be tampered with
+- **Expires**: After 24 hours, must login again
+- **Bearer scheme**: Standard HTTP authentication (`Authorization: Bearer <token>`)
+
+The token is your "proof of identity" - once you have it, you can access protected endpoints without sending your password again!
+
+---
+
 ## 🎯 How Files Work Together
 
 ### Registration Example
