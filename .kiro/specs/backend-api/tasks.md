@@ -72,8 +72,8 @@ This implementation plan builds a complete Python backend API for PupMatch using
     - **Property 14: Token Expiration**
     - **Validates: Requirements 1.1, 1.2, 1.5, 1.6**
 
-- [ ] 5. Implement profile management service
-  - [ ] 5.1 Create profile service
+- [x] 5. Implement profile management service
+  - [x] 5.1 Create profile service
     - Implement create profile with validation
     - Implement update profile
     - Implement get profile
@@ -81,7 +81,7 @@ This implementation plan builds a complete Python backend API for PupMatch using
     - Implement prompt management
     - _Requirements: 2.1, 2.2, 2.5, 2.6, 2.7_
 
-  - [ ] 5.2 Create Pydantic schemas for profiles
+  - [x] 5.2 Create Pydantic schemas for profiles
     - ProfileInput, ProfileUpdate schemas
     - Profile response schema with nested photos and prompts
     - PromptInput schema

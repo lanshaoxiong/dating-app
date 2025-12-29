@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from auth.service import AuthService
+from auth.auth_service import AuthService
 from auth.schemas import (
     RegisterRequest,
     LoginRequest,
