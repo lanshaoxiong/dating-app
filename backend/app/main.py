@@ -2,9 +2,11 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from auth.routes import router as auth_router
+from photo.routes import router as photo_router
 
 app = FastAPI(
     title="PupMatch API",
@@ -23,6 +25,15 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router)
+app.include_router(photo_router)
+
+# Mount static files for photo uploads (local storage)
+# In production with S3/GCS, this won't be needed
+import os
+uploads_dir = "uploads"
+if not os.path.exists(uploads_dir):
+    os.makedirs(uploads_dir)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 
 @app.get("/health")
