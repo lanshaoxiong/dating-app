@@ -1,4 +1,28 @@
-"""FastAPI routes for authentication"""
+"""FastAPI routes for authentication
+
+ARCHITECTURE NOTE:
+This app uses a HYBRID API approach:
+
+1. REST (this file) - Used for:
+   - Authentication endpoints (register, login) - Standard, widely understood
+   - File uploads (photos) - multipart/form-data works better with REST
+   
+2. GraphQL (Task 14) - Used for:
+   - Profile queries (getProfile, getMatches, getRecommendations)
+   - Profile mutations (updateProfile, likeProfile, sendMessage)
+   - Flexible data fetching for mobile apps
+   
+3. WebSocket (Task 12) - Used for:
+   - Real-time chat messaging
+   
+WHY KEEP AUTH AS REST?
+- Standard auth flow (POST /login, get token, use in Authorization header)
+- Works seamlessly with both REST and GraphQL endpoints
+- Widely understood by frontend developers
+- JWT tokens work with any API style
+
+The AuthService is API-agnostic and can be called from REST, GraphQL, or anywhere!
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -29,6 +53,11 @@ async def register(
 ):
     """Register a new user
     
+    REST endpoint for user registration. This stays as REST (not GraphQL) because:
+    - Standard authentication pattern
+    - Works with any frontend framework
+    - Simple, well-understood flow
+    
     Args:
         request: Registration request with email and password
         auth_service: Authentication service
@@ -55,6 +84,11 @@ async def login(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Login user and return JWT token
+    
+    REST endpoint for authentication. Returns JWT token that works with:
+    - REST endpoints (Authorization: Bearer <token>)
+    - GraphQL endpoints (same Authorization header)
+    - WebSocket connections (token in connection params)
     
     Args:
         request: Login request with email and password
