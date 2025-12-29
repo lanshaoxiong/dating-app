@@ -92,15 +92,15 @@ This implementation plan builds a complete Python backend API for PupMatch using
     - **Property 17: Photo Order Preservation**
     - **Validates: Requirements 2.4, 3.5**
 
-- [ ] 6. Implement photo storage service
-  - [ ] 6.1 Create S3 photo storage service
+- [x] 6. Implement photo storage service
+  - [x] 6.1 Create S3 photo storage service
     - Implement photo upload to S3
     - Implement photo deletion from S3
     - Implement signed URL generation
     - Implement file validation (type, size)
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-  - [ ] 6.2 Integrate photo service with profile service
+  - [x] 6.2 Integrate photo service with profile service
     - Add photo upload endpoint
     - Add photo delete endpoint
     - Add photo reorder endpoint
