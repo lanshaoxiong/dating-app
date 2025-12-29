@@ -28,7 +28,9 @@ app.include_router(auth_router)
 app.include_router(photo_router)
 
 # Mount static files for photo uploads (local storage)
-# In production with S3/GCS, this won't be needed
+# This serves files from the uploads/ directory at /uploads/* URLs
+# Example: uploads/photos/abc123.jpg → http://localhost:8000/uploads/photos/abc123.jpg
+# In production with S3/GCS, this won't be needed (cloud storage provides URLs directly)
 import os
 uploads_dir = "uploads"
 if not os.path.exists(uploads_dir):
